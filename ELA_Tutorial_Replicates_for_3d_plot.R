@@ -1,4 +1,4 @@
-unavailable <- setdiff(c("Rcpp","RcppArmadillo","doParallel","tidyverse",'gsubfn', 'zoo','snow','plyr', 'gtools','ggsci','igraph', 'tidygraph','RColorBrewer',"stringdist", "dplyr","data.table"), rownames(installed.packages()))
+unavailable <- setdiff(c("Rcpp","RcppArmadillo","doParallel","tidyverse",'gsubfn', 'zoo','snow','plyr', 'gtools','ggsci','igraph', 'tidygraph','RColorBrewer',"stringdist", "dplyr","data.table","vegan"), rownames(installed.packages()))
 install.packages(unavailable)
 
 # install rELA package
@@ -24,6 +24,7 @@ library("stringdist")
 library("rELA")
 library("dplyr")
 library("data.table")
+library("vegan")
 ## Energy Landscape Analysis
 
 ## Energy Landscape Analysis
@@ -34,6 +35,8 @@ threshold = 0.00
 threshold_interact = 0.0
 threads = 10
 pruning_pars = c(0.01, 0.01, 0.99)
+# set seed for nmds
+set.seed(42)
 
 # Specify the path for your own data in the code below, if necessary.
 baseabtable <- read.csv("rELA/data/abundance_table.csv", sep=',', fileEncoding='utf-8') %>%
@@ -130,8 +133,20 @@ ss_c1 <- apply(ocmat, 1, function(row) Bi(row, he, je)[[2]])
 
 row_names <- rownames(ocmat) # Assuming row names are set in ocmat
 
-# Combine the results to a dataframe
-result_df <- data.frame(time = row_names, Energy = result, rel.MDS1=adv$PC1, rel.MDS2=adv$PC2,TargetStableState=ss_c,TargetStableStateEn=ss_c1 )
+######## NMDS
+
+nmds = metaMDS(ocmat, distance = "bray")
+nmds
+
+plot(nmds, display = c("sites"))
+
+NMDS = scores(nmds)
+nmds_sites =as.data.frame(NMDS$sites)
+
+# Combine the results into a dataframe
+#result_df <- data.frame(time = row_names, Energy = result, rel.MDS1 = adv$PC1, rel.MDS2 = adv$PC2, TargetStableState = ss_c, TargetStableStateEn = ss_c1)
+result_df <- data.frame(time = row_names, Energy = result, rel.MDS1 = nmds_sites$NMDS1, rel.MDS2 = nmds_sites$NMDS2, TargetStableState = ss_c, TargetStableStateEn = ss_c1)
+
 dim(result_df)
 
 
